@@ -1,0 +1,15 @@
+
+
+This repository contains some configuration files and how-to's.
+Its purpose is for reference or to serve as an example of one way things could work.
+
+Folders:
+ - basic-confs:
+   - my kernel configuration
+   - an example /etc/fstab file
+   - my make.conf file
+ - emacs: 
+   - init.el file
+ - rEFInd: 
+   - an example refind.conf file
+   - how i set up dual boot of win10 and Gentoo

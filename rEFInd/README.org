@@ -1,0 +1,185 @@
+#+TITLE: Dual boot on UEFI with rEFInd
+#+OPTIONS: ^:nil
+#+OPTIONS: toc:nil
+
+Key points:
++ Dual boot Windows 10 and Gentoo Linux under UEFI
++ No Secure Boot
++ rEFInd boot manager
++ EFI stub loader
+
+Below are the steps i used to set up dual boot of Windows 10 and Gentoo under UEFI.
+All info is definitely out there, i just assembled the parts.
+
+I have used and so recommend /rEFInd/ and /GPT fdisk/, both from Roderick Smith.
+
+His website has great content, so, definitely start here: [[http://www.rodsbooks.com/refind/][The rEFInd Boot Manager]].
+
+
+* ...from Windows
+*** Backup
+   This cannot be stressed enough, so just backup for recovery.
+
+*** Disabling some features
+- Inside Windows
+  - Disable *Fast Startup* feature : [[https://www.tenforums.com/tutorials/4189-turn-off-fast-startup-windows-10-a.html][by tenforums]]
+- Inside your firmware's setup utility
+  - Disable *Fast Boot*
+  - Disable *Secure Boot* (think twice about that)
+
+*** Making some space
+
+1) Shrink the windows partition.
+  - [[https://www.tenforums.com/tutorials/96288-shrink-volume-partition-windows-10-a.html][by tenforums]]
+  - also check the /Additional considerations/ [[https://docs.microsoft.com/en-us/windows-server/storage/disk-management/shrink-a-basic-volume][by microsoft docs]].
+2) Reshrink
+
+  If you want more space and try to shrink again, this will probably fail.
+  See:
+  - [[https://superuser.com/questions/1017764/how-can-i-shrink-a-windows-10-partition][answer in superuser]], which mentions the following
+  - [[https://www.download3k.com/articles/How-to-shrink-a-disk-volume-beyond-the-point-where-any-unmovable-files-are-located-00432][article]]
+  In short:
+
+  The volume cannot be shrinked further, because there are immovable files at the end of the volume.
+  Check the Application Log for Event 259, which will identify the immovable file.
+
+  Unless you see anything strange:
+  - Disable *hibernation*
+
+    Run cmd as Admin and command:
+
+    /powercfg /h off/
+  - Disable *pagefile*.
+
+    Open System in Control Panel\ Advanced System Settings\ Advanced\ Performance\ Advanced\ Change\ No Paging File.
+  - Disable *system restore*.
+
+    Open System in Control Panel\ Advanced System Settings\ System Protection, see for the drive you care (say C:), if protection is On, click Configure\ Disable system protection\ Apply\ Yes.
+  - Disable *kernel memory dump*.
+
+    Open System in Control Panel\ Advanced System Settings\ Advanced\ Startup and Recovery\ Settings: Under System Failure >Write debugging information, pick *(none)* from the drop-down meny \ Ok.
+  - *RESTART* the computer. 
+  - Defragment the disk (enter *defrag* in the search bar, and follow suit).
+  - Now, actually go and *Shrink* the volume again.
+  - Follow the respectively reverse procedure, and *Re-Enable*:
+    - hibernation
+    - pagefile
+    - system restore
+    - kernel memory dump
+  - *RESTART* the computer.
+
+*** GPT fdisk
+To partition my hard drive (SSD) i used /gdisk/, a text-mode partitioning tool from GPT fdisk.
+
+You can read here, by Rod Smith:
+ - [[http://www.rodsbooks.com/gdisk/index.html]]      
+ - [[http://www.rodsbooks.com/gdisk/walkthrough.html]] 
+ - [[http://www.rodsbooks.com/gdisk/advice.html][Partitioning Advice]]
+
+Obtain here: [[https://sourceforge.net/projects/gptfdisk/][GPT fdisk's sourceforge]] 
+
+Be carefull not to delete your ESP (EFI System Partition), which is a FAT partition, or your Windows partition (since we aim to dual boot). 
+Partition for Linux however you see fit. I chose the simplest partitioning scheme: root(/) and swap partitions only.
+
+
+* ...thru rEFInd...
+rEFInd is a boot manager, not a boot loader. However, using the Kernel's EFI Stub Loader enables a boot manager to actually function as a boot loader.
+So, here, we will install rEFInd and later pair it with the EFI Stub Loader (no GRUB 2, ELILO, efibootmgr and the like).
+
+For great information see [[http://www.rodsbooks.com/efi-bootloaders/][here]] and [[http://www.rodsbooks.com/efi-bootloaders/efistub.html][here]].
+
+So, while still in Windows:
+
+1. Get the binary zip file from Sourceforge [[https://sourceforge.net/projects/refind/]] 
+2. Extract the files from the zip file (i use [[https://www.7-zip.org][7-Zip]]). You will end up with a directory named something like refind-bin-0.11.3 (for version 0.11.3) or refind-bin-0.11.4 (version 0.11.4) etc.
+   Note the path to this folder. Here, we'll assume that the location of the folder is C:\refind-bin-0.11.4
+3. As described much better by Rod Smith [[http://rodsbooks.com/refind/installing.html#windows][here]], Run cmd as Administrator and (ATTENTION for the slashes forward vs backward):
+   
+   #+BEGIN_EXAMPLE -n
+     C:\>mountvol S: /S
+     C:\>cd C:\refind-bin-0.11.4
+     C:\>xcopy /E refind S:\EFI\refind\
+     C:\>S:
+     S:\>cd EFI\refind
+     S:\EFI\refind>dir
+   #+END_EXAMPLE
+   Now, you are seeing inside refind, copied inside your ESP. As you can see there are drivers and tools for more than one architecture, so delete what you do not need. E.g.:
+
+   #+BEGIN_EXAMPLE
+     S:\EFI\refind>del drivers_ia32
+     S:\EFI\refind>del /p refind_ia32.efi
+   #+END_EXAMPLE
+   I only kept:
+     - drivers_x64 folder
+     - icons folder
+     - tools_x64 folder
+     - refind.conf-sample file
+     - refind_x64.efi file
+
+   Then (assuming the chosen architecture is also x64):
+   #+BEGIN_EXAMPLE -n
+     S:\EFI\refind>rename refind.conf-sample refind.conf
+     S:\EFI\refind>bcdedit /set "{bootmgr}" path \EFI\refind\refind_x64.efi
+     S:\EFI\refind>bcdedit /set "{bootmgr}" description "rEFInd boot manager"
+   #+END_EXAMPLE
+   (Just in case: Once, after a major Windows update, the computer turned back to automatically booting Windows, i.e. Windows changed the path to bootmanager. Just repeat the second and third commands above.)
+4. Restart the computer to see. It should work: rEFInd loads and finds your Windows partition.
+
+
+* ...to Gentoo
+The ultimate resource for Gentoo is the Gentoo Handbook:
+
+[[https://wiki.gentoo.org/wiki/Handbook:AMD64][Main page for AMD64]] 
+
+What is going to be mentioned here is just the parts concerning rEFInd. Since the last 2 links above actually contain most of what is said here, i'll document only the differences:
+*** Mounting the boot partition
+During installation, right after chrooting https://wiki.gentoo.org/wiki/Handbook:AMD64/Installation/Base#Entering_the_new_environment, it's about mounting the boot partition.
+
+We will also assume that your EFI partition is also in /dev/sda2. But instead of: 
+#+BEGIN_EXAMPLE
+  root # mkdir /boot
+  root # mount /dev/sda2 /boot
+#+END_EXAMPLE
+
+Here we do this:
+#+BEGIN_EXAMPLE
+  root # mkdir /boot/efi
+  root # mount /dev/sda2 /boot/efi
+#+END_EXAMPLE
+In other words, we choose to mount the ESP on /boot/efi, instead of /boot. This is something to remember also for when you are making your /etc/fstab.
+
+*** Symbolic links
+Right after [[https://wiki.gentoo.org/wiki/Handbook:AMD64/Installation/Kernel#Compiling_and_installing][compiling and installing the kernel]], (see also [[https://wiki.gentoo.org/wiki/EFI_stub_kernel]] and [[https://wiki.gentoo.org/wiki/EFI_System_Partition]] for kernel configuration):   
+
+ - unmount /boot/efi, 
+ - cd into /boot and (assuming you have already emerged *debianutils*) 
+ - make the symbolic links: (This is also described [[https://wiki.gentoo.org/wiki/Refind#Kernel_image_outside_ESP_partition][here]]. The kernel version is an example.)
+
+#+BEGIN_EXAMPLE -n
+  root # umount /boot/efi
+  root # cd /boot
+  root # ln -s vmlinuz-4.19.66-gentoo vmlinuz
+  root # ln -s vmlinuz-4.19.66-gentoo.old vmlinuz.old
+  root # ln -s config-4.19.66-gentoo config
+  root # ln -s config-4.19.66-gentoo.old config.old
+  root # ln -s System.map-4.19.66-gentoo System.map
+  root # ln -s System.map-4.19.66-gentoo.old System.map.old
+#+END_EXAMPLE
+This ensures rEFInd is ready for kernel updates.
+
+Now, we continue with Gentoo following the *Handbook* until we reboot.
+
+rEFInd will automatically detect all the kernels it can load.
+
+*** refind.conf
+In order to access the EFI partition, where the file refind.conf resides, remember to mount the ESP.
+
+*refind.conf* is a self explanatory file absolutely worth reading. Towards the end, there are templates so that we can make a menuentry for Gentoo. 
+In my [[./refind.conf]] you can see:
++ the menuentry for Gentoo
+  - which also features how to apply intel microcode updates ([[https://wiki.gentoo.org/wiki/Intel_microcode]])
++ the option *scan_all_linux_kernels* which i have set to *false*. 
+  The reason is that if it is set to true, rEFInd will scan the same linux kernel both automatically AND from the menuentry.
+
+And that's it.
+<2019-09-05 Thu>
