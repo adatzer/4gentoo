@@ -2,7 +2,7 @@
 #+OPTIONS: ^:nil
 #+OPTIONS: toc:nil
 
-* Kernel Upgrade
+** 1. Kernel Upgrade
 
 Here are the steps i use for kernel upgrades.
 
@@ -49,6 +49,10 @@ As an example, assume that the kernel installed is 4.19.44, and the new kernel a
 
 7. *Reboot*
 
+   #+begin_example
+   reboot
+   #+end_example
+
 8. Use app-admin/eclean-kernel
     
    #+begin_example +n
@@ -57,7 +61,7 @@ As an example, assume that the kernel installed is 4.19.44, and the new kernel a
    eclean-kernel -n 2
    #+end_example
 
-* Keeping up-2-date 
+** 2. Keeping up-2-date 
 
 Here are the commands to keep my system up to date.
 
