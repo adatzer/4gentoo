@@ -8,6 +8,7 @@ Folders:
    - my kernel configuration
    - an example /etc/fstab file
    - my make.conf file
+   - various how's
  - emacs: 
    - init.el file
  - rEFInd: 
