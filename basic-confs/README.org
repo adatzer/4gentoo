@@ -1,0 +1,82 @@
+#+TITLE: Various How's
+#+OPTIONS: ^:nil
+#+OPTIONS: toc:nil
+
+* Kernel Upgrade
+
+Here are the steps i use for kernel upgrades.
+
+As an example, assume that the kernel installed is 4.19.44, and the new kernel available is 4.19.52
+
+1. emerge the new kernel sources
+   
+2. Backup your kernel configuration. The commands below will only work if you have configured the option *IKCONFIG=y* in your kernel.
+
+   #+begin_example -n
+   zcat /proc/config.gz > /path/to/backup/file
+   #+end_example
+
+3. eselect kernel
+   
+   #+begin_example +n
+   eselect kernel list
+   eselect kernel 2 
+   #+end_example
+
+4. make
+   
+   #+begin_example +n
+   cd /usr/src/linux
+   make oldconfig
+   make modules_prepare
+   emerge --ask @module-rebuild
+   make && make modules_install
+   make install
+   #+end_example
+
+5. *CHECK* whether the symlinks for the bootloader are correct
+   
+   #+begin_example +n
+   ls -la /boot
+   #+end_example
+
+6. Protect the new, deselect the old kernel sources
+   
+   #+begin_example +n
+   emerge --noreplace sys-kernel/gentoo-sources:4.19.52
+   emerge -n emerge --deselect sys-kernel/gentoo-sources:4.19.44
+   #+end_example
+
+7. *Reboot*
+
+8. Use app-admin/eclean-kernel
+    
+   #+begin_example +n
+   eclean-kernel -l
+   eclean-kernel -n 2 -p
+   eclean-kernel -n 2
+   #+end_example
+
+* Keeping up-2-date 
+
+Here are the commands to keep my system up to date.
+
+#+begin_example -n
+emaint sync --auto
+eix-sync
+emaint --fix cleanresume
+emerge --ask --verbose --oneshot --update sys-apps/portage
+emerge --ask --verbose --deep --with-bdeps=y --changed-use --update @world
+emerge --ask --depclean
+revdep-rebuild -p -v -i
+perl-cleaner --all
+env-update && source /etc/profile
+eclean --deep --verbose --pretend distfiles
+#+end_example
+
+*Notes*
+ - revdep-rebuild and eclean were run with the --pretend option, in order to double-check.
+ - after emerging @world, and generally between the lines, maybe there are other actions needed, e.g. an etc-update
+
+
+<2019-09-05 Thu>

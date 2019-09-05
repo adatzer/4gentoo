@@ -181,5 +181,6 @@ In my [[./refind.conf]] you can see:
 + the option *scan_all_linux_kernels* which i have set to *false*. 
   The reason is that if it is set to true, rEFInd will scan the same linux kernel both automatically AND from the menuentry.
 
+
 And that's it.
 <2019-09-05 Thu>
