@@ -129,6 +129,9 @@
 ;; comment-or-uncomment-region
 (global-set-key "\C-c;" 'comment-or-uncomment-region)
 
+;; C-`
+(global-set-key [(control ?`)] 'other-window)
+
 ;; C-j
 (substitute-key-definition
  'electric-newline-and-maybe-indent

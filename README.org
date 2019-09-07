@@ -14,3 +14,7 @@ Folders:
  - rEFInd: 
    - an example refind.conf file
    - how i set up dual boot of win10 and Gentoo
+ - uncat
+   - keyboard.conf
+   - locale
+   - fonts-local.conf

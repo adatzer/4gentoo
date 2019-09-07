@@ -1,0 +1,7 @@
+# Configuration file for eselect
+# This file has been automatically generated.
+LANG="C"
+
+# ada
+LC_COLLATE="C"
+LC_CTYPE="el_GR.utf8"

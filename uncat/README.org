@@ -1,0 +1,31 @@
+
+
+This is the *uncat*-egorized folder containing various files:
+
+** keyboard.conf
+This file goes to /etc/X11/xorg.conf.d/
+
+It is my keyboard configuration allowing me to switch to typing greek using Caps Lock as my toggle button.
+
+For all available options see: /usr/share/X11/xkb/rules/base.lst
+
+** locale
+This file goes to /etc/env.d/
+
+It allows to type in greek. No support for greek filenames though.
+For more info see: [[https://wiki.gentoo.org/wiki/Localization/Guide]]
+
+** fonts-local.conf 
+This file, named bare local.conf goes to /etc/fonts/
+
+It all started when i tried to change fonts for dwm or st:
+Even though i emerged media-fonts/libertine and media-fonts/fantasque-sans-mono, fontconfig (eselect fontconfig ...) did not work.
+So, i found this exceptional post on the matter:
+[[https://eev.ee/blog/2015/05/20/i-stared-into-the-fontconfig-and-the-fontconfig-stared-back-at-me/]]
+
+Definitely read it. Here are my notes:
++ Unless told otherwise, fontconfig assumes that every font is sans-serif.
++ The local.conf is loaded after the fallback to sans-serif, that's why you have to alias the whole family to the font you want.
++ sans-serif/serif/monospace..etc are just human categorizations.
++ *fc-match* 
+  *fc-match mono*  or  *fc-match -s "mono"* can show you which font is going to be used e.g. for monospace
