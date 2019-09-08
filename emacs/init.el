@@ -26,6 +26,8 @@
 ;; Don't make backups
 (setq make-backup-files 0 backup-inhibited t)
 
+;; no auto vertical scroll
+(setq auto-window-vscroll nil)
 
 ;; menu-bar-mode, tooltip-mode, tool-bar-mode, column-number-mode
 (menu-bar-mode -1)
