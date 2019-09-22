@@ -1,4 +1,4 @@
-;; Ada
+;;;; Ada
 
 
 ;; bootstrap straight
@@ -26,20 +26,33 @@
 ;; Don't make backups
 (setq make-backup-files 0 backup-inhibited t)
 
-;; no auto vertical scroll
+;; no startup message
+(setq inhibit-startup-message t)
+
+;; whitespace
+(setq show-trailing-whitespace t)
+
+;; scroll
 (setq auto-window-vscroll nil)
+(setq scroll-conservatively 5)
 
 ;; menu-bar-mode, tooltip-mode, tool-bar-mode, column-number-mode
 (menu-bar-mode -1)
 (tooltip-mode -1)
 (tool-bar-mode -1)
-(setq inhibit-startup-message t)
 (setq column-number-mode t)
 
+;; electric-pair-mode
+(electric-pair-mode 1)
 
 ;; display line-numbers
 (when (version<= "26.0.50" emacs-version)
   (global-display-line-numbers-mode))
+
+
+;; browser
+(setq browse-url-browser-function 'browse-url-generic)
+(setq browse-url-generic-program "surf")
 
 
 ;; which-key
@@ -53,17 +66,36 @@
 (ido-mode 1)
 
 
+;; LISP
+(setq lisp-lambda-list-keyword-parameter-alignment t)
+(setq lisp-lambda-list-keyword-alignment t)
+(setq common-lisp-hyperspec-root "/usr/share/doc/hyperspec")
+
+(add-hook 'lisp-mode-hook
+	  (lambda ()
+	    (set (make-local-variable
+		  lisp-indent-function)
+		 'common-lisp-indent-function)))
+
+
 
 ;; -----
 ;; SLIME -----------------------------------------------------------------------
 ;; -----
 (load (expand-file-name "~/quicklisp/slime-helper.el"))
-(setq slime-contribs '(slime-fancy))
+
+(setq inferior-lisp-program "sbcl")
 (setq slime-lisp-implementations
       '((sbcl ("/usr/bin/sbcl"))
 	(ccl ("/usr/bin/ccl"))
 	(ecl ("/usr/bin/ecl"))))
-;(setq inferior-lisp-program "sbcl")
+
+(setq slime-net-coding-system 'utf-8-unix)
+
+(eval-after-load "slime"
+  '(progn
+     (setq slime-complete-symbol*-fancy t)))
+
 
 ;; SLDB
 ;; display slime debugger for sbcl (level 1) below selected
@@ -109,6 +141,34 @@
 
 
 
+;; ---------
+;; FUN STAFF -------------------------------------------------------------------
+;; ---------
+
+;; swap windows (from github: vseloved/scripts)
+(defun swap-windows ()
+  "If you have 2 windows, it swaps them"
+  (interactive)
+  (cond ((/= (count-windows) 2)
+	 (message "You need exactly 2 windows to do this."))
+	(t
+	 (let* ((w1 (first (window-list)))
+		(w2 (second (window-list)))
+		(b1 (window-buffer w1))
+		(b2 (window-buffer w2))
+		(s1 (window-start w1))
+		(s2 (window-start w2)))
+	   (set-window-buffer w1 b2)
+	   (set-window-buffer w2 b1)
+	   (set-window-start w1 s2)
+	   (set-window-start w2 s1))))
+  (other-window 1))
+
+;; before-save-hook
+(add-hook 'before-save-hook 'delete-trailing-whitespace)
+
+
+
 ;; --------------------------------------------
 ;; KEYS - ALIASES ..following slime conventions --------------------------------
 ;; --------------------------------------------
@@ -116,39 +176,42 @@
 ;; M-x sclear RET
 (defalias 'sclear 'slime-repl-clear-buffer)
 
-;; C-x C-a C-c == C-x C-a c
+;; C-c s  :: swap-windows
+(global-set-key [(control ?c) ?s] 'swap-windows)
+
+;; C-x C-a C-c == C-x C-a c  :: slime-repl-clear-buffer
 (global-set-key [(control ?x) (control ?a) (control ?c)] 'slime-repl-clear-buffer)
 (global-set-key [(control ?x) (control ?a) ?c]           'slime-repl-clear-buffer)
 
-;; C-x C-a C-d == C-x C-a d
+;; C-x C-a C-d == C-x C-a d  :: slime-edit-definition
 (global-set-key [(control ?x) (control ?a) (control ?d)] 'slime-edit-definition)
 (global-set-key [(control ?x) (control ?a) ?d]           'slime-edit-definition)
 
-;; C-x C-a C-s == C-x C-a s
+;; C-x C-a C-s == C-x C-a s  :: slime-pop-find-definition-stack
 (global-set-key [(control ?x) (control ?a) (control ?s)] 'slime-pop-find-definition-stack)
 (global-set-key [(control ?x) (control ?a) ?s]           'slime-pop-find-definition-stack)
 
-;; comment-or-uncomment-region
+;; C-c ;  :: comment-or-uncomment-region
 (global-set-key "\C-c;" 'comment-or-uncomment-region)
 
-;; C-`
+;; C-`  :: other-window
 (global-set-key [(control ?`)] 'other-window)
 
-;; C-j
+;; C-j  :: previous-line
 (substitute-key-definition
  'electric-newline-and-maybe-indent
  'previous-line
- (current-global-map))          ; C-j == previous-line
+ (current-global-map)) ; C-j == previous-line
 (substitute-key-definition
  'slime-repl-newline-and-indent
  'previous-line
- slime-repl-mode-map)           ; also for slime
+ slime-repl-mode-map)  ; also for slime
 (substitute-key-definition
  'org-return-indent
  'previous-line
- org-mode-map)                  ; also for org-mode
+ org-mode-map)         ; also for org-mode
 
-;; C-k
+;; C-k  :: next-line
 (substitute-key-definition
  'kill-line 'next-line (current-global-map))  ; C-k == next-line
 
@@ -162,21 +225,31 @@
 (global-set-key [(control ?<)] 'backward-word) ; C-< == backward-word
 (global-set-key [(control ?>)] 'forward-word)  ; C-> == forward-word
 
+;; C-p  :: forward-sexp
+(global-unset-key [(control ?p)])
+(global-set-key [(control ?p)] 'forward-sexp)
+
+;; C-o  :: backward-sexp
+(global-unset-key [(control ?o)])
+(global-set-key [(control ?o)] 'backward-sexp)
+
 
 
 ;; ------
-;; THEMES ---------------------------------------------------------------------- 
+;; THEMES ----------------------------------------------------------------------
 ;; ------
 
 ;; gocyda-theme
 (straight-use-package
  `(gocyda-theme :type git :host github :repo "adatzer/gocyda-theme"))
-;(load-theme 'gocyda t)
+;;(add-to-list 'custom-theme-load-path "~/git2go/gocyda-theme")
+;;(load-theme 'gocyda t)
 
 
 ;; nodra-theme
 (straight-use-package
  `(nodra-theme :type git :host github :repo "adatzer/nodra-theme"))
+;;(add-to-list 'custom-theme-load-path "~/git2go/nodra-theme")
 (load-theme 'nodra t)
 
 
