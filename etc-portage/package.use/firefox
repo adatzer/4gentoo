@@ -1,0 +1,2 @@
+# inhibit Gecko media plugin
+www-client/firefox -gmp-autoupdate

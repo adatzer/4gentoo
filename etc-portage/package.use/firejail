@@ -1,0 +1,4 @@
+# enable X11 isolation and suid operation for regular users
+sys-apps/firejail x11 suid
+# requirements of firejail
+x11-wm/xpra server

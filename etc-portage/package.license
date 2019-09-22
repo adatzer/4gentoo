@@ -1,0 +1,6 @@
+# The following package(s) are using licenses which aren't covered by
+# ACCEPT_LICENSE="@FREE":
+sys-firmware/intel-microcode @BINARY-REDISTRIBUTABLE
+sys-kernel/linux-firmware linux-firmware no-source-code linux-fw-redistributable
+dev-util/movfuscator LCC
+sci-libs/cdf CDF

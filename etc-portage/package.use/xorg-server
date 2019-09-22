@@ -1,0 +1,4 @@
+# enable Xephyr
+# also build Xvfb server required by x11-wm/xpra(dependency of firejail)
+# also build kdrive X servers (required by Xephyr)
+x11-base/xorg-server xephyr xvfb kdrive

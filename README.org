@@ -11,6 +11,11 @@ Folders:
    - various how's
  - emacs: 
    - init.el file
+ - etc-portage
+   - package.accept_keywords directory
+   - package.license file
+   - package.mask file
+   - package.use directory
  - rEFInd: 
    - an example refind.conf file
    - how i set up dual boot of win10 and Gentoo
