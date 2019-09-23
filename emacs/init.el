@@ -42,7 +42,7 @@
 (tool-bar-mode -1)
 (setq column-number-mode t)
 
-;; electric-pair-mode
+;; electric-pair-mode ...see also the SLIME section below
 (electric-pair-mode 1)
 
 ;; display line-numbers
@@ -92,9 +92,10 @@
 
 (setq slime-net-coding-system 'utf-8-unix)
 
-(eval-after-load "slime"
-  '(progn
-     (setq slime-complete-symbol*-fancy t)))
+;; slime-repl-return behavior depends on balanced parens, so:
+(add-hook 'slime-repl-mode-hook
+	  (lambda ()
+	    (electric-pair-local-mode -1)))
 
 
 ;; SLDB
