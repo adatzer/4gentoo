@@ -69,7 +69,6 @@
 ;; LISP
 (setq lisp-lambda-list-keyword-parameter-alignment t)
 (setq lisp-lambda-list-keyword-alignment t)
-(setq common-lisp-hyperspec-root "/usr/share/doc/hyperspec")
 
 (add-hook 'lisp-mode-hook
 	  (lambda ()
@@ -83,6 +82,7 @@
 ;; SLIME -----------------------------------------------------------------------
 ;; -----
 (load (expand-file-name "~/quicklisp/slime-helper.el"))
+(load "/home/ada/quicklisp/clhs-use-local.el" t)
 
 (setq inferior-lisp-program "sbcl")
 (setq slime-lisp-implementations
