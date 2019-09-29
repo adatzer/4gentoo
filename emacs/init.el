@@ -26,20 +26,23 @@
 ;; Don't make backups
 (setq make-backup-files 0 backup-inhibited t)
 
-;; no startup message
-(setq inhibit-startup-message t)
+;; Startup
+(setq inhibit-startup-screen  t
+      inhibit-startup-message t
+      initial-scratch-message "")
 
 ;; whitespace
 (setq show-trailing-whitespace t)
 
 ;; scroll
-(setq auto-window-vscroll nil)
-(setq scroll-conservatively 5)
+(setq auto-window-vscroll   nil
+      scroll-conservatively 5)
 
 ;; menu-bar-mode, tooltip-mode, tool-bar-mode, column-number-mode
 (menu-bar-mode -1)
 (tooltip-mode -1)
 (tool-bar-mode -1)
+(toggle-scroll-bar -1)
 (setq column-number-mode t)
 
 ;; electric-pair-mode ...see also the SLIME section below
@@ -49,10 +52,9 @@
 (when (version<= "26.0.50" emacs-version)
   (global-display-line-numbers-mode))
 
-
 ;; browser
-(setq browse-url-browser-function 'browse-url-generic)
-(setq browse-url-generic-program "surf")
+(setq browse-url-browser-function 'browse-url-generic
+      browse-url-generic-program  "surf")
 
 
 ;; which-key
@@ -67,8 +69,9 @@
 
 
 ;; LISP
-(setq lisp-lambda-list-keyword-parameter-alignment t)
-(setq lisp-lambda-list-keyword-alignment t)
+(require 'cl-lib)
+(setq lisp-lambda-list-keyword-parameter-alignment t
+      lisp-lambda-list-keyword-alignment           t)
 
 (add-hook 'lisp-mode-hook
 	  (lambda ()
@@ -103,6 +106,27 @@
 (push '("\\*sldb sbcl/1\\*"
 	(display-buffer-below-selected))
       display-buffer-alist)
+
+
+
+;; -------
+;; NEOTREE ---------------------------------------------------------------------
+;; -------
+(straight-use-package
+ `(neotree :type git :host github :repo "jaypei/emacs-neotree"))
+;; also see keybindings below
+(setq neo-theme (if (display-graphic-p) 'ascii))
+
+(setq neo-window-width          40
+      neo-smart-open            nil
+      neo-toggle-window-keep-p  t
+      neo-autorefresh           nil
+      neo-show-hidden-files     t
+      neo-auto-indent-point     t)
+
+(add-hook 'neotree-mode-hook
+ 	  (lambda (&rest args)
+ 	    (display-line-numbers-mode -1)))
 
 
 
@@ -180,6 +204,9 @@
 ;; C-c s  :: swap-windows
 (global-set-key [(control ?c) ?s] 'swap-windows)
 
+;; <f7>  :: neotree-toggle
+(global-set-key [f7] 'neotree-toggle)
+
 ;; C-x C-a C-c == C-x C-a c  :: slime-repl-clear-buffer
 (global-set-key [(control ?x) (control ?a) (control ?c)] 'slime-repl-clear-buffer)
 (global-set-key [(control ?x) (control ?a) ?c]           'slime-repl-clear-buffer)
@@ -191,6 +218,10 @@
 ;; C-x C-a C-s == C-x C-a s  :: slime-pop-find-definition-stack
 (global-set-key [(control ?x) (control ?a) (control ?s)] 'slime-pop-find-definition-stack)
 (global-set-key [(control ?x) (control ?a) ?s]           'slime-pop-find-definition-stack)
+
+;; C-x C-a C-e == C-x C-a e  :: end-of-buffer
+(global-set-key [(control ?x) (control ?a) (control ?e)] 'end-of-buffer)
+(global-set-key [(control ?x) (control ?a) ?e]           'end-of-buffer)
 
 ;; C-c ;  :: comment-or-uncomment-region
 (global-set-key "\C-c;" 'comment-or-uncomment-region)
@@ -243,17 +274,20 @@
 ;; gocyda-theme
 (straight-use-package
  `(gocyda-theme :type git :host github :repo "adatzer/gocyda-theme"))
-;;(add-to-list 'custom-theme-load-path "~/git2go/gocyda-theme")
 ;;(load-theme 'gocyda t)
 
 
 ;; nodra-theme
 (straight-use-package
  `(nodra-theme :type git :host github :repo "adatzer/nodra-theme"))
-;;(add-to-list 'custom-theme-load-path "~/git2go/nodra-theme")
 (load-theme 'nodra t)
 
 
+
+;; -------
+;; STARTUP ---------------------------------------------------------------------
+;; -------
+(neotree)
 
 
 ;; -----------------------------------------------------------------------------
