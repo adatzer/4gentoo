@@ -128,6 +128,9 @@
  	  (lambda (&rest args)
  	    (display-line-numbers-mode -1)))
 
+(add-hook 'neotree-mode-hook
+	  (lambda ()
+	    (hl-line-mode 1)))
 
 
 ;; -----
