@@ -1,3 +1,4 @@
+
 ;;;; Ada
 
 
@@ -20,16 +21,25 @@
 
 
 ;; -----
-;; BASIC -----------------------------------------------------------------------
+;; BASIC ------------------------------------------------------------------
 ;; -----
 
 ;; Don't make backups
 (setq make-backup-files 0 backup-inhibited t)
 
+;; before-save-hook
+(add-hook 'before-save-hook 'delete-trailing-whitespace)
+
+;; final newline
+(setq-default require-final-newline t)
+
 ;; Startup
 (setq inhibit-startup-screen  t
       inhibit-startup-message t
       initial-scratch-message "")
+
+;; tabs
+(setq-default indent-tabs-mode nil)
 
 ;; whitespace
 (setq show-trailing-whitespace t)
@@ -45,7 +55,7 @@
 (toggle-scroll-bar -1)
 (setq column-number-mode t)
 
-;; electric-pair-mode ...see also the SLIME section below
+;; electric-pair-mode ...see also the SLIME, SLY sections below
 (electric-pair-mode 1)
 
 ;; display line-numbers
@@ -68,8 +78,10 @@
 (ido-mode 1)
 
 
-;; LISP
-(require 'cl-lib)
+
+;; ----
+;; LISP -------------------------------------------------------------------
+;; ----
 (setq lisp-lambda-list-keyword-parameter-alignment t
       lisp-lambda-list-keyword-alignment           t)
 
@@ -79,28 +91,33 @@
 		  lisp-indent-function)
 		 'common-lisp-indent-function)))
 
+(setq common-lisp-hyperspec-root "file:///usr/share/doc/hyperspec/HyperSpec/")
+
 
 
 ;; -----
-;; SLIME -----------------------------------------------------------------------
+;; SLIME ------------------------------------------------------------------
 ;; -----
-(load (expand-file-name "~/quicklisp/slime-helper.el"))
-(load "/home/ada/quicklisp/clhs-use-local.el" t)
+(add-to-list 'load-path (expand-file-name "~/common-lisp/slime"))
+(require 'slime-autoloads)
+(slime-setup '(slime-fancy))
 
-(setq inferior-lisp-program "sbcl")
-(setq slime-lisp-implementations
-      '((sbcl ("/usr/bin/sbcl"))
-	(ccl ("/usr/bin/ccl"))
-	(ecl ("/usr/bin/ecl"))))
+;; (setq inferior-lisp-program "sbcl --dynamic-space-size 16000")
+;; (setq inferior-lisp-program "ccl")
 
-(setq slime-net-coding-system 'utf-8-unix)
+(setq slime-lisp-implementations '((ccl ("/usr/bin/ccl"))
+				   (sbcl ("/usr/bin/sbcl")
+                                         :coding-system utf-8-unix)
+				   (ecl ("/usr/bin/ecl")))
+      slime-net-coding-system    'utf-8-unix)
+
+(add-to-list 'slime-completion-at-point-functions
+	     'slime-fuzzy-complete-symbol)
 
 ;; slime-repl-return behavior depends on balanced parens, so:
 (add-hook 'slime-repl-mode-hook
 	  (lambda ()
 	    (electric-pair-local-mode -1)))
-
-
 ;; SLDB
 ;; display slime debugger for sbcl (level 1) below selected
 (push '("\\*sldb sbcl/1\\*"
@@ -109,8 +126,19 @@
 
 
 
+;; ---
+;; SLY --------------------------------------------------------------------
+;; ---
+;; (straight-use-package 'sly)
+;; (setq sly-net-coding-system 'utf-8-unix)
+;; (add-hook 'sly-mrepl-mode-hook
+;; 	  (lambda ()
+;; 	    (electric-pair-local-mode -1)))
+
+
+
 ;; -------
-;; NEOTREE ---------------------------------------------------------------------
+;; NEOTREE ----------------------------------------------------------------
 ;; -------
 (straight-use-package
  `(neotree :type git :host github :repo "jaypei/emacs-neotree"))
@@ -133,8 +161,9 @@
 	    (hl-line-mode 1)))
 
 
+
 ;; -----
-;; OTHER -----------------------------------------------------------------------
+;; OTHER ------------------------------------------------------------------
 ;; -----
 
 ;; htmlize
@@ -170,7 +199,7 @@
 
 
 ;; ---------
-;; FUN STAFF -------------------------------------------------------------------
+;; FUN STAFF --------------------------------------------------------------
 ;; ---------
 
 ;; swap windows (from github: vseloved/scripts)
@@ -192,45 +221,64 @@
 	   (set-window-start w2 s1))))
   (other-window 1))
 
-;; before-save-hook
-(add-hook 'before-save-hook 'delete-trailing-whitespace)
+(defun enclose-forward-sexp-in-parens ()
+  "Encloses following sexp in parens.Places the cursor after the opening one"
+  (interactive)
+  (insert "(")
+  (forward-sexp 1)
+  (insert ")")
+  (backward-sexp 1)
+  (forward-char 1))
 
 
 
-;; --------------------------------------------
-;; KEYS - ALIASES ..following slime conventions --------------------------------
-;; --------------------------------------------
+;; --------------
+;; KEYS - ALIASES (following slime's conventions) -------------------------
+;; --------------
 
-;; M-x sclear RET
+;; M-x sclear RET for SLIME
 (defalias 'sclear 'slime-repl-clear-buffer)
+
+;; M-x xclear RET for SLY
+;; (defalias 'xclear 'sly-mrepl-clear-repl)
 
 ;; C-c s  :: swap-windows
 (global-set-key [(control ?c) ?s] 'swap-windows)
 
+;; C-x C-a C-p  :: enclose-forward-sexp-in-parens
+(global-set-key [(control ?x) (control ?a) ?p]
+		'enclose-forward-sexp-in-parens)
+(global-set-key [(control ?x) (control ?a) (control ?p)]
+		'enclose-forward-sexp-in-parens)
+
 ;; <f7>  :: neotree-toggle
 (global-set-key [f7] 'neotree-toggle)
-
-;; C-x C-a C-c == C-x C-a c  :: slime-repl-clear-buffer
-(global-set-key [(control ?x) (control ?a) (control ?c)] 'slime-repl-clear-buffer)
-(global-set-key [(control ?x) (control ?a) ?c]           'slime-repl-clear-buffer)
-
-;; C-x C-a C-d == C-x C-a d  :: slime-edit-definition
-(global-set-key [(control ?x) (control ?a) (control ?d)] 'slime-edit-definition)
-(global-set-key [(control ?x) (control ?a) ?d]           'slime-edit-definition)
-
-;; C-x C-a C-s == C-x C-a s  :: slime-pop-find-definition-stack
-(global-set-key [(control ?x) (control ?a) (control ?s)] 'slime-pop-find-definition-stack)
-(global-set-key [(control ?x) (control ?a) ?s]           'slime-pop-find-definition-stack)
-
-;; C-x C-a C-e == C-x C-a e  :: end-of-buffer
-(global-set-key [(control ?x) (control ?a) (control ?e)] 'end-of-buffer)
-(global-set-key [(control ?x) (control ?a) ?e]           'end-of-buffer)
 
 ;; C-c ;  :: comment-or-uncomment-region
 (global-set-key "\C-c;" 'comment-or-uncomment-region)
 
 ;; C-`  :: other-window
 (global-set-key [(control ?`)] 'other-window)
+
+;; C-x C-a C-c == C-x C-a c  :: slime-repl-clear-buffer
+(global-set-key [(control ?x) (control ?a) (control ?c)]
+                'slime-repl-clear-buffer)
+(global-set-key [(control ?x) (control ?a) ?c]
+                'slime-repl-clear-buffer)
+
+;; C-x C-a C-d == C-x C-a d  :: slime-edit-definition
+(global-set-key [(control ?x) (control ?a) (control ?d)] 'slime-edit-definition)
+(global-set-key [(control ?x) (control ?a) ?d]           'slime-edit-definition)
+
+;; C-x C-a C-s == C-x C-a s  :: slime-pop-find-definition-stack
+(global-set-key [(control ?x) (control ?a) (control ?s)]
+                'slime-pop-find-definition-stack)
+(global-set-key [(control ?x) (control ?a) ?s]
+                'slime-pop-find-definition-stack)
+
+;; C-x C-a C-e == C-x C-a e  :: end-of-buffer
+(global-set-key [(control ?x) (control ?a) (control ?e)] 'end-of-buffer)
+(global-set-key [(control ?x) (control ?a) ?e]           'end-of-buffer)
 
 ;; C-j  :: previous-line
 (substitute-key-definition
@@ -271,28 +319,23 @@
 
 
 ;; ------
-;; THEMES ----------------------------------------------------------------------
+;; THEMES -----------------------------------------------------------------
 ;; ------
 
-;; gocyda-theme
-(straight-use-package
- `(gocyda-theme :type git :host github :repo "adatzer/gocyda-theme"))
-;;(load-theme 'gocyda t)
-
-
 ;; nodra-theme
-(straight-use-package
- `(nodra-theme :type git :host github :repo "adatzer/nodra-theme"))
+;; (straight-use-package
+;;  `(nodra-theme :type git :host github :repo "adatzer/nodra-theme"))
+(add-to-list 'custom-theme-load-path (expand-file-name "~/git2go/nodra-theme"))
 (load-theme 'nodra t)
 
 
 
 ;; -------
-;; STARTUP ---------------------------------------------------------------------
+;; STARTUP ----------------------------------------------------------------
 ;; -------
 (neotree)
 
 
-;; -----------------------------------------------------------------------------
-;; -----------------------------------------------------------------------------
-;; -----------------------------------------------------------------------------
+;; ------------------------------------------------------------------------
+;; ------------------------------------------------------------------------
+;; ------------------------------------------------------------------------
