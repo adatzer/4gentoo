@@ -87,9 +87,7 @@
 
 (add-hook 'lisp-mode-hook
 	  (lambda ()
-	    (set (make-local-variable
-		  lisp-indent-function)
-		 'common-lisp-indent-function)))
+            (setq lisp-indent-function 'common-lisp-indent-function)))
 
 (setq common-lisp-hyperspec-root "file:///usr/share/doc/hyperspec/HyperSpec/")
 
@@ -100,10 +98,12 @@
 ;; -----
 (add-to-list 'load-path (expand-file-name "~/common-lisp/slime"))
 (require 'slime-autoloads)
-(slime-setup '(slime-fancy))
+
+(setq slime-contribs '(slime-fancy slime-cl-indent))
+(slime-setup)
 
 ;; (setq inferior-lisp-program "sbcl --dynamic-space-size 16000")
-;; (setq inferior-lisp-program "ccl")
+(setq inferior-lisp-program "ccl")
 
 (setq slime-lisp-implementations '((ccl ("/usr/bin/ccl"))
 				   (sbcl ("/usr/bin/sbcl")
@@ -119,8 +119,12 @@
 	  (lambda ()
 	    (electric-pair-local-mode -1)))
 ;; SLDB
-;; display slime debugger for sbcl (level 1) below selected
+;; display slime debugger for sbcl and ccl (level 1) below selected
 (push '("\\*sldb sbcl/1\\*"
+	(display-buffer-below-selected))
+      display-buffer-alist)
+
+(push '("\\*sldb ccl/1\\*"
 	(display-buffer-below-selected))
       display-buffer-alist)
 
@@ -323,9 +327,8 @@
 ;; ------
 
 ;; nodra-theme
-;; (straight-use-package
-;;  `(nodra-theme :type git :host github :repo "adatzer/nodra-theme"))
-(add-to-list 'custom-theme-load-path (expand-file-name "~/git2go/nodra-theme"))
+(straight-use-package
+ `(nodra-theme :type git :host github :repo "adatzer/nodra-theme"))
 (load-theme 'nodra t)
 
 
