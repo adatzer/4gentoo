@@ -86,7 +86,7 @@
       lisp-lambda-list-keyword-alignment           t)
 
 (add-hook 'lisp-mode-hook
-	  (lambda ()
+          (lambda ()
             (setq lisp-indent-function 'common-lisp-indent-function)))
 
 (setq common-lisp-hyperspec-root "file:///usr/share/doc/hyperspec/HyperSpec/")
@@ -142,6 +142,22 @@
 
 
 ;; -------
+;; CLOJURE ----------------------------------------------------------------
+;; -------
+(straight-use-package 'clojure-mode)
+
+(straight-use-package 'cider)
+
+
+
+;; ------
+;; RACKET -----------------------------------------------------------------
+;; ------
+(straight-use-package 'racket-mode)
+
+
+
+;; -------
 ;; NEOTREE ----------------------------------------------------------------
 ;; -------
 (straight-use-package
@@ -163,6 +179,28 @@
 (add-hook 'neotree-mode-hook
 	  (lambda ()
 	    (hl-line-mode 1)))
+
+
+
+;; -----
+;; FACES ------------------------------------------------------------------
+;; -----
+(defface my-face-of-parens
+  '((t (:foreground "#ff3030"
+                    :background "#000000"
+                    :weight bold)))
+  "my face for lisp and clojure modes")
+
+(straight-use-package 'highlight-chars)
+
+(defun apply-hl ()
+  (hc-highlight-chars '("()[]{}")
+                      'my-face-of-parens
+                      nil
+                      t))
+
+(add-hook 'lisp-mode-hook
+          'apply-hl)
 
 
 
