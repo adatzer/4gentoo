@@ -119,15 +119,14 @@
 	  (lambda ()
 	    (electric-pair-local-mode -1)))
 ;; SLDB
-;; display slime debugger for sbcl and ccl (level 1) below selected
-(push '("\\*sldb sbcl/1\\*"
-	(display-buffer-below-selected))
-      display-buffer-alist)
-
-(push '("\\*sldb ccl/1\\*"
-	(display-buffer-below-selected))
-      display-buffer-alist)
-
+;; display slime debugger for sbcl and ccl below selected
+(setq display-buffer-alist
+      '(("sldb"
+         (display-buffer-below-selected)
+         (side . right)
+         (slot . 1)
+         (window-width . 0.5)
+         (reusable-frames . nil))))
 
 
 ;; ---
@@ -214,11 +213,8 @@
 ;; rainbow-mode
 (straight-use-package 'rainbow-mode)
 
-;; emacs-reveal
-(straight-use-package 'org-re-reveal)
-
 ;; ess
-(straight-use-package 'ess)
+;; (straight-use-package 'ess)
 
 ;; org-mode and necessary keys
 (straight-use-package 'org)
@@ -237,6 +233,9 @@
    (python . t)
    (sql . t)
    (shell . t)))
+
+;; emacs-reveal
+(straight-use-package 'org-re-reveal)
 
 
 
