@@ -1,4 +1,3 @@
-
 ;;;; Ada
 
 
@@ -30,8 +29,39 @@
 ;; before-save-hook
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 
+;; real-auto-save
+(straight-use-package 'real-auto-save)
+(setq real-auto-save-interval 3) ;; in seconds
+(add-hook 'fundamental-mode-hook 'real-auto-save-mode)
+(add-hook 'prog-mode-hook 'real-auto-save-mode)
+(add-hook 'change-log-mode-hook 'real-auto-save-mode)
+(add-hook 'text-mode-hook 'real-auto-save-mode)
+
+;; assign to prog-mode
+(add-to-list 'auto-mode-alist '("\\.hcl\\'" . prog-mode))
+(add-to-list 'auto-mode-alist '("\\.tf\\'" . prog-mode))
+(add-to-list 'auto-mode-alist '("\\.tfvars\\'" . prog-mode))
+(add-to-list 'auto-mode-alist '("\\.yml.tmpl\\'" . prog-mode))
+(add-to-list 'auto-mode-alist '("\\.yml\\'" . prog-mode))
+(add-to-list 'auto-mode-alist '("\\.yaml\\'" . prog-mode))
+
+;; always get the latest changes from disk
+(global-auto-revert-mode t)
+
+(setq auto-save-default nil)
+(setq create-lockfiles nil)
+
+;; autosave, without the #autosave-files#, see ergoemacs
+;; (defun now-save-all-unsaved ()
+;;   (interactive)
+;;   (save-some-buffers t))
+
+;; (add-hook 'focus-out-hook (lambda () (now-save-all-unsaved)))
+;; (add-function :after after-focus-change-function #'now-save-all-unsaved)
+
 ;; final newline
-(setq-default require-final-newline t)
+;; (setq-default require-final-newline nil)
+;; (setq mode-require-final-newline nil)
 
 ;; Startup
 (setq inhibit-startup-screen  t
@@ -54,6 +84,13 @@
 (tool-bar-mode -1)
 (toggle-scroll-bar -1)
 (setq column-number-mode t)
+
+;; show some path on top
+(setq frame-title-format
+      '((:eval
+         (if (buffer-file-name)
+             (abbreviate-file-name (buffer-file-name))
+           "%b"))))
 
 ;; electric-pair-mode ...see also the SLIME, SLY sections below
 (electric-pair-mode 1)
@@ -89,44 +126,44 @@
           (lambda ()
             (setq lisp-indent-function 'common-lisp-indent-function)))
 
-(setq common-lisp-hyperspec-root "file:///usr/share/doc/hyperspec/HyperSpec/")
+;;(setq common-lisp-hyperspec-root "file:///usr/share/doc/hyperspec/HyperSpec/")
 
 
 
 ;; -----
 ;; SLIME ------------------------------------------------------------------
 ;; -----
-(add-to-list 'load-path (expand-file-name "~/common-lisp/slime"))
-(require 'slime-autoloads)
+;; (add-to-list 'load-path (expand-file-name "~/common-lisp/slime"))
+;; (require 'slime-autoloads)
 
-(setq slime-contribs '(slime-fancy slime-cl-indent))
-(slime-setup)
+;; (setq slime-contribs '(slime-fancy slime-cl-indent))
+;; (slime-setup)
 
 ;; (setq inferior-lisp-program "sbcl --dynamic-space-size 16000")
-(setq inferior-lisp-program "ccl")
+;; (setq inferior-lisp-program "ccl")
 
-(setq slime-lisp-implementations '((ccl ("/usr/bin/ccl"))
-				   (sbcl ("/usr/bin/sbcl")
-                                         :coding-system utf-8-unix)
-				   (ecl ("/usr/bin/ecl")))
-      slime-net-coding-system    'utf-8-unix)
+;;(setq slime-lisp-implementations '((ccl ("/usr/bin/ccl"))
+;;				   (sbcl ("/usr/bin/sbcl")
+;;                                         :coding-system utf-8-unix)
+;;				   (ecl ("/usr/bin/ecl"))))
+;; (setq slime-net-coding-system 'utf-8-unix)
 
-(add-to-list 'slime-completion-at-point-functions
-	     'slime-fuzzy-complete-symbol)
+;; (add-to-list 'slime-completion-at-point-functions
+;; 	     'slime-fuzzy-complete-symbol)
 
 ;; slime-repl-return behavior depends on balanced parens, so:
-(add-hook 'slime-repl-mode-hook
-	  (lambda ()
-	    (electric-pair-local-mode -1)))
+;; (add-hook 'slime-repl-mode-hook
+;; 	  (lambda ()
+;; 	    (electric-pair-local-mode -1)))
 ;; SLDB
 ;; display slime debugger for sbcl and ccl below selected
-(setq display-buffer-alist
-      '(("sldb"
-         (display-buffer-below-selected)
-         (side . right)
-         (slot . 1)
-         (window-width . 0.5)
-         (reusable-frames . nil))))
+;; (setq display-buffer-alist
+;;       '(("sldb"
+;;          (display-buffer-below-selected)
+;;          (side . right)
+;;          (slot . 1)
+;;          (window-width . 0.5)
+;;          (reusable-frames . nil))))
 
 
 ;; ---
@@ -156,6 +193,138 @@
 
 
 
+;; ----
+;; HTML -------------------------------------------------------------------
+;; ----
+(add-hook 'html-mode-hook
+          (lambda ()
+            (set (make-local-variable 'sgml-basic-offset) 4)))
+
+
+
+;; ----------------
+;; JAVASCRIPT - JSX -------------------------------------------------------
+;; ----------------
+(straight-use-package 'js2-mode)
+(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
+(setq js-indent-level 2)
+
+(straight-use-package 'rjsx-mode)
+(add-to-list 'auto-mode-alist '("\\.jsx\\'" . rjsx-mode))
+
+(straight-use-package 'typescript-mode)
+(add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-mode))
+(setq typescript-indent-level 2)
+
+
+
+;; ----
+;; JSON -------------------------------------------------------------------
+;; ----
+(straight-use-package 'json-mode)
+(add-hook 'json-mode-hook
+          (lambda ()
+            (make-local-variable 'js-indent-level)
+            (setq js-indent-level 8)))
+
+(defun json-indent-4()
+  (interactive)
+  (setq js-indent-level 4))
+
+(defun json-indent-8()
+  (interactive)
+  (setq js-indent-level 8))
+
+
+
+;; ----
+;; GO ---------------------------------------------------------------------
+;; ----
+(straight-use-package 'go-mode)
+
+;; example
+;; (add-hook 'go-mode-hook
+;;   (lambda ()
+;;     (setq-default)
+;;     (setq tab-width 2)
+;;     (setq standard-indent 2)
+;;     (setq indent-tabs-mode nil)))
+
+
+
+;; ----
+;; HCL --------------------------------------------------------------------
+;; ----
+(straight-use-package 'hcl-mode)
+(custom-set-variables
+ '(hcl-indent-level 2))
+
+
+;; ----
+;; LUA --------------------------------------------------------------------
+;; ----
+(straight-use-package 'lua-mode)
+
+
+
+;; ----
+;; SCALA ------------------------------------------------------------------
+;; ----
+(straight-use-package 'scala-mode)
+
+
+
+;; ----
+;; PHP --------------------------------------------------------------------
+;; ----
+(straight-use-package 'php-mode)
+
+
+
+;; ----
+;; RUST -------------------------------------------------------------------
+;; ----
+(straight-use-package 'rust-mode)
+(add-to-list 'auto-mode-alist '("\\.rs\\'" . rust-mode))
+
+
+
+;; ----
+;; JAVA -------------------------------------------------------------------
+;; ----
+(defun java-indent-setup ()
+  (c-set-offset 'arglist-intro '+))
+(add-hook 'java-mode-hook 'java-indent-setup)
+
+
+
+;; ----
+;; OBJC -------------------------------------------------------------------
+;; ----
+(defun objc-indent-setup ()
+  (c-set-style "java")
+  (c-set-offset 'brace-list-close '-)
+  (c-set-offset 'brace-list-intro '0)
+  (c-set-offset 'arglist-close '0)
+  (c-set-offset 'substatement-open '0)
+  (c-set-offset 'inline-open '+)
+  (c-set-offset 'block-open '+))
+(add-hook 'objc-mode-hook 'objc-indent-setup)
+
+
+
+;; ------------------
+;; rainbow-delimiters -----------------------------------------------------
+;; ------------------
+(straight-use-package 'rainbow-delimiters)
+
+(add-hook 'lisp-mode-hook #'rainbow-delimiters-mode)
+(add-hook 'clojure-mode-hook #'rainbow-delimiters-mode)
+(add-hook 'racket-mode-hook #'rainbow-delimiters-mode)
+(add-hook 'emacs-lisp-mode-hook #'rainbow-delimiters-mode)
+
+
+
 ;; -------
 ;; NEOTREE ----------------------------------------------------------------
 ;; -------
@@ -182,30 +351,11 @@
 
 
 ;; -----
-;; FACES ------------------------------------------------------------------
-;; -----
-(defface my-face-of-parens
-  '((t (:foreground "#ff3030"
-                    :background "#000000"
-                    :weight bold)))
-  "my face for lisp and clojure modes")
-
-(straight-use-package 'highlight-chars)
-
-(defun apply-hl ()
-  (hc-highlight-chars '("()[]{}")
-                      'my-face-of-parens
-                      nil
-                      t))
-
-(add-hook 'lisp-mode-hook
-          'apply-hl)
-
-
-
-;; -----
 ;; OTHER ------------------------------------------------------------------
 ;; -----
+
+;; markdown-mode
+(straight-use-package 'markdown-mode)
 
 ;; htmlize
 (straight-use-package 'htmlize)
@@ -217,31 +367,37 @@
 ;; (straight-use-package 'ess)
 
 ;; org-mode and necessary keys
-(straight-use-package 'org)
-(global-set-key "\C-cl" 'org-store-link)
-(global-set-key "\C-ca" 'org-agenda)
-(global-set-key "\C-cc" 'org-capture)
-(global-set-key "\C-cb" 'org-switchb)
+;(straight-use-package 'org)
+;(global-set-key "\C-cl" 'org-store-link)
+;(global-set-key "\C-ca" 'org-agenda)
+;(global-set-key "\C-cc" 'org-capture)
+;(global-set-key "\C-cb" 'org-switchb)
 
 ;; babel
 ;; active Babel languages
-(org-babel-do-load-languages
- 'org-babel-load-languages
- '((lisp . t)
-   (scheme . t)
-   (R . t)
-   (python . t)
-   (sql . t)
-   (shell . t)))
+;(org-babel-do-load-languages
+; 'org-babel-load-languages
+; '((lisp . t)
+;   (scheme . t)
+;   (R . t)
+;   (python . t)
+;   (sql . t)
+;   (shell . t)))
 
 ;; emacs-reveal
-(straight-use-package 'org-re-reveal)
+;(straight-use-package 'org-re-reveal)
 
 
 
 ;; ---------
 ;; FUN STAFF --------------------------------------------------------------
 ;; ---------
+
+;; minibuffer background color
+(defun minibuffer-bg ()
+  (set (make-local-variable 'face-remapping-alist)
+       '((default :background "#000000" :foreground "#ffffff"))))
+(add-hook 'minibuffer-setup-hook 'minibuffer-bg)
 
 ;; swap windows (from github: vseloved/scripts)
 (defun swap-windows ()
@@ -271,6 +427,33 @@
   (backward-sexp 1)
   (forward-char 1))
 
+(defun enclose-forward-sexp-in-dquotes ()
+  "Encloses following sexp in dquotes.Places the cursor after the opening one"
+  (interactive)
+  (insert "\"")
+  (forward-sexp 1)
+  (insert "\"")
+  (backward-sexp 1)
+  (forward-char 1))
+
+(defun enclose-forward-sexp-in-squotes ()
+  "Encloses following sexp in squotes.Places the cursor after the opening one"
+  (interactive)
+  (insert "'")
+  (forward-sexp 1)
+  (insert "'")
+  (backward-sexp 1)
+  (forward-char 1))
+
+(defun enclose-forward-sexp-in-braces ()
+  "Encloses following sexp in braces.Places the cursor after the opening one"
+  (interactive)
+  (insert "[")
+  (forward-sexp 1)
+  (insert "]")
+  (backward-sexp 1)
+  (forward-char 1))
+
 
 
 ;; --------------
@@ -278,7 +461,7 @@
 ;; --------------
 
 ;; M-x sclear RET for SLIME
-(defalias 'sclear 'slime-repl-clear-buffer)
+;; (defalias 'sclear 'slime-repl-clear-buffer)
 
 ;; M-x xclear RET for SLY
 ;; (defalias 'xclear 'sly-mrepl-clear-repl)
@@ -292,6 +475,24 @@
 (global-set-key [(control ?x) (control ?a) (control ?p)]
 		'enclose-forward-sexp-in-parens)
 
+;; C-x C-a C-o  :: enclose-forward-sexp-in-dquotes
+(global-set-key [(control ?x) (control ?a) ?o]
+		'enclose-forward-sexp-in-dquotes)
+(global-set-key [(control ?x) (control ?a) (control ?o)]
+		'enclose-forward-sexp-in-dquotes)
+
+;; C-x C-a C-o  :: enclose-forward-sexp-in-squotes
+(global-set-key [(control ?x) (control ?a) ?i]
+		'enclose-forward-sexp-in-squotes)
+(global-set-key [(control ?x) (control ?a) (control ?i)]
+		'enclose-forward-sexp-in-squotes)
+
+;; C-x C-a C-u  :: enclose-forward-sexp-in-braces
+(global-set-key [(control ?x) (control ?a) ?u]
+		'enclose-forward-sexp-in-braces)
+(global-set-key [(control ?x) (control ?a) (control ?u)]
+		'enclose-forward-sexp-in-braces)
+
 ;; <f7>  :: neotree-toggle
 (global-set-key [f7] 'neotree-toggle)
 
@@ -302,14 +503,14 @@
 (global-set-key [(control ?`)] 'other-window)
 
 ;; C-x C-a C-c == C-x C-a c  :: slime-repl-clear-buffer
-(global-set-key [(control ?x) (control ?a) (control ?c)]
-                'slime-repl-clear-buffer)
-(global-set-key [(control ?x) (control ?a) ?c]
-                'slime-repl-clear-buffer)
+;; (global-set-key [(control ?x) (control ?a) (control ?c)]
+;;                 'slime-repl-clear-buffer)
+;; (global-set-key [(control ?x) (control ?a) ?c]
+;;                 'slime-repl-clear-buffer)
 
 ;; C-x C-a C-d == C-x C-a d  :: slime-edit-definition
-(global-set-key [(control ?x) (control ?a) (control ?d)] 'slime-edit-definition)
-(global-set-key [(control ?x) (control ?a) ?d]           'slime-edit-definition)
+;; (global-set-key [(control ?x) (control ?a) (control ?d)] 'slime-edit-definition)
+;; (global-set-key [(control ?x) (control ?a) ?d]           'slime-edit-definition)
 
 ;; C-x C-a C-s == C-x C-a s  :: slime-pop-find-definition-stack
 (global-set-key [(control ?x) (control ?a) (control ?s)]
@@ -326,14 +527,14 @@
  'electric-newline-and-maybe-indent
  'previous-line
  (current-global-map)) ; C-j == previous-line
-(substitute-key-definition
- 'slime-repl-newline-and-indent
- 'previous-line
- slime-repl-mode-map)  ; also for slime
-(substitute-key-definition
- 'org-return-indent
- 'previous-line
- org-mode-map)         ; also for org-mode
+;; (substitute-key-definition
+;;  'slime-repl-newline-and-indent
+;;  'previous-line
+;;  slime-repl-mode-map)  ; also for slime
+;(substitute-key-definition
+; 'org-return-indent
+; 'previous-line
+; org-mode-map)         ; also for org-mode
 
 ;; C-k  :: next-line
 (substitute-key-definition
@@ -341,10 +542,10 @@
 
 ;; C-, vs C-. vs C-> vs C-<
 (global-set-key [(control ?,)] 'backward-char) ; C-, == backward-char
-(substitute-key-definition                     ; also for org-mode
- 'org-cycle-agenda-files
- 'backward-char
- org-mode-map)
+;(substitute-key-definition                     ; also for org-mode
+ ;'org-cycle-agenda-files
+ ;'backward-char
+ ;org-mode-map)
 (global-set-key [(control ?.)] 'forward-char)  ; C-. == forward-char
 (global-set-key [(control ?<)] 'backward-word) ; C-< == backward-word
 (global-set-key [(control ?>)] 'forward-word)  ; C-> == forward-word
@@ -364,8 +565,7 @@
 ;; ------
 
 ;; nodra-theme
-(straight-use-package
- `(nodra-theme :type git :host github :repo "adatzer/nodra-theme"))
+(add-to-list 'custom-theme-load-path (expand-file-name "path/to/nodra"))
 (load-theme 'nodra t)
 
 
@@ -373,9 +573,30 @@
 ;; -------
 ;; STARTUP ----------------------------------------------------------------
 ;; -------
+
 (neotree)
 
 
+
 ;; ------------------------------------------------------------------------
 ;; ------------------------------------------------------------------------
 ;; ------------------------------------------------------------------------
+
+(set-face-attribute 'default nil :height 110)
+;;(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(uniquify-buffer-name-style 'post-forward-angle-brackets nil (uniquify)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
